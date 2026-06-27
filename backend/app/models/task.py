@@ -32,6 +32,8 @@ class Task(Base):
     
     # Google Task API ID, used for keeping state synced with Google Tasks service
     google_task_id = Column(String, unique=True, index=True, nullable=True)
+    sync_status = Column(String, default="pending", nullable=False, index=True)
+    last_synced_at = Column(DateTime, nullable=True)
 
     # Relationships
     owner = relationship("User", back_populates="tasks")

@@ -84,6 +84,8 @@ def test_task_crud_and_relationship(db_session):
     assert saved_task.completed is False  # default status
     assert saved_task.priority == "Medium"  # default priority
     assert saved_task.google_task_id is None
+    assert saved_task.sync_status == "pending"
+    assert saved_task.last_synced_at is None
     
     # Check User -> Task relationship linkage
     assert len(user.tasks) == 1
