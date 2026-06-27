@@ -26,6 +26,7 @@ class Settings(BaseModel):
     # Development fallback so local tests can run before a real secret is configured.
     ENCRYPTION_KEY: str = "YSZgbaGtndlDA6E2badxBC4r2TnkmfweX_DPth7zxH4="
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     GOOGLE_SCOPES: List[str] = Field(
         default_factory=lambda: [
             "https://www.googleapis.com/auth/gmail.readonly",
@@ -54,6 +55,7 @@ class Settings(BaseModel):
                 "ENCRYPTION_KEY", "YSZgbaGtndlDA6E2badxBC4r2TnkmfweX_DPth7zxH4="
             ),
             GEMINI_API_KEY=os.getenv("GEMINI_API_KEY", ""),
+            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             GOOGLE_SCOPES=scopes,
         )
 

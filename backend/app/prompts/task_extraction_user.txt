@@ -1,0 +1,12 @@
+Extract task candidates from the following parsed email.
+
+Gmail Message ID: {gmail_message_id}
+Thread ID: {thread_id}
+From: {sender}
+To: {recipient}
+Date: {date}
+Subject: {subject}
+Labels: {labels}
+Snippet: {snippet}
+Body:
+{body}
