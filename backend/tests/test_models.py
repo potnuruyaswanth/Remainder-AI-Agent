@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from datetime import datetime, timedelta
 
 from app.database import Base
@@ -14,7 +15,11 @@ TEST_DATABASE_URL = "sqlite:///:memory:"
 @pytest.fixture(name="db_session")
 def fixture_db_session():
     """Provides a clean in-memory database session for each test case."""
-    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     # Create all tables in the temporary database
     Base.metadata.create_all(bind=engine)
     
