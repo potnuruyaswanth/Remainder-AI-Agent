@@ -3,15 +3,60 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agent.email_task_agent import EmailTaskAgent
 from app.config import settings
-from app.database import init_db
+from app.database import SessionLocal, init_db
 from app.routers.auth import router as auth_router
+from app.scheduler.scheduler import AgentScheduler, SchedulerConfig
+from app.services.gemini_service import GeminiService
+from app.services.gmail_service import GmailService
+from app.services.google_tasks_service import GoogleTasksService
+from app.utils.logger import logger
+
+
+def build_agent_runner():
+    """Create the single callable that the scheduler is allowed to execute."""
+
+    def run_agent():
+        if settings.SCHEDULER_USER_ID is None:
+            raise RuntimeError("SCHEDULER_USER_ID must be configured when the scheduler is enabled.")
+
+        db = SessionLocal()
+        try:
+            agent = EmailTaskAgent(
+                gmail_service=GmailService(db),
+                gemini_service=GeminiService(),
+                google_tasks_service=GoogleTasksService(db),
+                user_id=settings.SCHEDULER_USER_ID,
+            )
+            return agent.run()
+        finally:
+            db.close()
+
+    return run_agent
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    scheduler = None
+    if settings.SCHEDULER_ENABLED:
+        scheduler = AgentScheduler(
+            agent_runner=build_agent_runner(),
+            config=SchedulerConfig(
+                enabled=settings.SCHEDULER_ENABLED,
+                interval_minutes=settings.SCHEDULER_INTERVAL_MINUTES,
+                max_concurrent_runs=settings.SCHEDULER_MAX_CONCURRENT_RUNS,
+                retry_delay_seconds=settings.SCHEDULER_RETRY_DELAY_SECONDS,
+            ),
+        )
+        try:
+            scheduler.start()
+        except Exception:
+            logger.error("Failed to start scheduler during application startup.", exc_info=True)
     yield
+    if scheduler is not None:
+        scheduler.shutdown()
 
 
 app = FastAPI(
