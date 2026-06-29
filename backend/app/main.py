@@ -6,7 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agent.email_task_agent import EmailTaskAgent
 from app.config import settings
 from app.database import SessionLocal, init_db
+from app.exceptions import register_exception_handlers
 from app.routers.auth import router as auth_router
+from app.routers.agent import router as agent_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.gmail import router as gmail_router
+from app.routers.settings import router as settings_router
+from app.routers.tasks import router as tasks_router
 from app.scheduler.scheduler import AgentScheduler, SchedulerConfig
 from app.services.gemini_service import GeminiService
 from app.services.gmail_service import GmailService
@@ -54,6 +60,7 @@ async def lifespan(_: FastAPI):
             scheduler.start()
         except Exception:
             logger.error("Failed to start scheduler during application startup.", exc_info=True)
+    _.state.agent_scheduler = scheduler
     yield
     if scheduler is not None:
         scheduler.shutdown()
@@ -74,6 +81,13 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(dashboard_router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(gmail_router, prefix="/api/gmail", tags=["gmail"])
+app.include_router(settings_router, prefix="/api/settings", tags=["settings"])
+app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
+
+register_exception_handlers(app)
 
 
 @app.get("/health")

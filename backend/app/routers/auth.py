@@ -157,7 +157,7 @@ async def callback(request: Request, code: str, db: Session = Depends(get_db)):
     return redirect_response
 
 
-@router.post("/logout")
+@router.api_route("/logout", methods=["GET", "POST"])
 def logout(current_user: User = Depends(get_current_user)):
     """Logs out the user by clearing the session token cookie."""
     logger.info(f"User logged out.")
